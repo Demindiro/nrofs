@@ -4,6 +4,7 @@ from argparse import ArgumentParser
 from struct import pack, unpack
 from os import path
 from pathlib import Path
+import os
 
 MAGIC = b"NrRdOnly"
 VERSION = 0
@@ -47,6 +48,9 @@ class UnsupportedVersionException(Exception):
 
 def create(args):
     assert args.files != []
+
+    if args.change_dir is not None:
+        os.chdir(args.change_dir)
 
     # Ensure we don't have any duplicates
     files = set(map(Path, args.files))
@@ -127,6 +131,7 @@ if __name__ == '__main__':
     p.add_argument('-r', '--recursive', action='store_true')
     p.add_argument('-v', '--verbose', action='store_true')
     p.add_argument('-b', '--block-size', type=int, default=12, help="Block size as a power of 2")
+    p.add_argument('-C', '--change-dir', help='Change to the given directory before collecting files')
     args = p.parse_args()
 
     if args.list:
