@@ -41,7 +41,6 @@ impl Fs {
 		for (i, e) in s
 			.header
 			.iter(|o| s.do_io(o))
-			.unwrap()
 			.map(Result::unwrap)
 			.enumerate()
 		{

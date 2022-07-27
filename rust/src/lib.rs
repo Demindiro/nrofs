@@ -74,11 +74,11 @@ impl Header {
 		(index < self.file_count).then(|| get(index, io))
 	}
 
-	pub fn iter<R, Io>(&self, mut io: Io) -> Result<Iter<R, Io>, R>
+	pub fn iter<R, Io>(&self, io: Io) -> Iter<R, Io>
 	where
 		Io: FnMut(Op<'_>) -> Result<(), R>,
 	{
-		io(Op::Seek(16)).map(|()| Iter { io, count: self.file_count, offset: 0 })
+		Iter { io, count: self.file_count, offset: 0 }
 	}
 
 	pub fn file_count(&self) -> u32 {
