@@ -1,0 +1,6 @@
+[workspace]
+members = [ "rust", "fuse" ]
+
+[profile.release]
+lto = "fat"
+strip = "symbols"

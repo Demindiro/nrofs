@@ -1,0 +1,58 @@
+= Nora's read-only filesystem
+
+NROFS is a very simple filesystem intended for bootloaders with a focus on avoiding redundant
+copying.
+
+== Features
+
+* Up to 4 billion files
+* File sizes of up to 4GB.
+* Adjustable block size.
+* Maximum total size of 4 billion blocks.
+
+== Format
+
+All integers are in little-endian format.
+
+The filesystem begins with a 16-byte header.
+
+|===
+| Byte(s) | Description
+
+| 7:0
+| Magic string "`NrRdOnly`"
+
+| 8
+| Version, 0 as of writing.
+
+| 9
+| Block size as a power of 2.
+
+| 11:10
+| Reserved, must be all zeroes.
+
+| 15:12
+| Amount of files as a little-endian integer.
+|===
+
+Immediately after the header comes a list of entries.
+Each entry is 12 bytes large.
+
+|===
+| Byte(s) | Description
+
+| 3:0
+| Address of the filename string in bytes.
+
+| 7:4
+| Address of the first block.
+
+| 11:8
+| Total size of the file.
+|===
+
+=== Strings
+
+Strings are located anywhere in the first 4GB.
+They are prefixed with a single byte indicating the length.
+The string's contents come immediately after.
