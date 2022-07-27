@@ -113,7 +113,10 @@ def list_files(args):
     for _ in range(file_count):
         filename_addr, block_addr, file_size = read_entry(ar_meta)
         ar_data.seek(filename_addr)
-        print('%8d  %s' % (file_size, read_string(ar_data)))
+        if args.verbose:
+            print('%8d  %8d  %s' % (block_addr, file_size, read_string(ar_data)))
+        else:
+            print('%8d  %s' % (file_size, read_string(ar_data)))
 
 if __name__ == '__main__':
     p = ArgumentParser()
