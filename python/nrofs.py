@@ -2,8 +2,8 @@
 
 from argparse import ArgumentParser
 from struct import pack, unpack
-import math
 from os import path
+from pathlib import Path
 
 MAGIC = b"NrRdOnly"
 VERSION = 0
@@ -46,12 +46,23 @@ class UnsupportedVersionException(Exception):
     pass
 
 def create(args):
+    assert args.files != []
+
+    # Ensure we don't have any duplicates
+    files = set(map(Path, args.files))
+    if args.recursive:
+        # Collect all files and discard directory entries
+        all_files = set()
+        for f in files:
+            if path.isdir(f):
+                #all_files |= {e for e in f.glob('**') if path.isfile(e)}
+                all_files |= {*filter(lambda e: e.is_file(), f.glob('**/*'))}
+            else:
+                all_files.add(f)
+        files = all_files
     # I have a strong preference for sorted files
-    # Also ensure we don't have any duplicates
-    files = sorted(set(args.files))
+    files = sorted(map(str, files))
     file_count = len(files)
-    block_mask = (1 << args.block_size) - 1
-    calc_blocks = lambda n: (n + block_mask) >> args.block_size
 
     # Open file twice so we can write entries & data simultaneously without explicitly
     # seeking all the time
@@ -59,6 +70,9 @@ def create(args):
     ar_data = open(args.output, 'wb')
 
     write_header(ar_meta, args.block_size, file_count)
+
+    block_mask = (1 << args.block_size) - 1
+    calc_blocks = lambda n: (n + block_mask) >> args.block_size
 
     total_strings_size = sum(map(len, files))
     total_meta_size = 16 + 12 * file_count + total_strings_size
@@ -69,6 +83,8 @@ def create(args):
     next_string_addr = total_meta_size - total_strings_size
     next_block_addr = total_meta_blocks
     for f in files:
+        if args.verbose:
+            print(f)
         s = path.getsize(f)
         write_entry(ar_meta, next_string_addr, next_block_addr, s)
         bs = calc_blocks(s)
@@ -91,6 +107,9 @@ def list_files(args):
     ar_meta = open(args.output, 'rb')
     ar_data = open(args.output, 'rb')
     block_size, file_count = read_header(ar_meta)
+    if args.verbose:
+        print('block size:', block_size)
+        print('file count:', file_count)
     for _ in range(file_count):
         filename_addr, block_addr, file_size = read_entry(ar_meta)
         ar_data.seek(filename_addr)

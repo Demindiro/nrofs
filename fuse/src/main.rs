@@ -75,7 +75,7 @@ impl Fs {
 	}
 
 	fn attr(&self, ty: FileType, size: u64, ino: u64) -> FileAttr {
-		let block_mask = (1u64 << self.header.block_size()) - 1;
+		let blksize = 1u32 << self.header.block_size();
 		FileAttr {
 			atime: UNIX_EPOCH,
 			mtime: UNIX_EPOCH,
@@ -89,9 +89,9 @@ impl Fs {
 			flags: 0,
 			kind: ty,
 			size,
-			blocks: (size + block_mask) & !block_mask,
+			blocks: (size + u64::from(blksize) - 1) / u64::from(blksize),
 			ino,
-			blksize: 1 << self.header.block_size(),
+			blksize,
 		}
 	}
 
